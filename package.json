@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "multi-agent": "tsx watch src/langchain/multi-agent.ts",
-    "harness": "tsx src/vesion.1.0/main.ts",
+    "harness": "tsx src/v1/main.ts",
     "build": "tsc",
     "start": "node dist/index.js"
   },

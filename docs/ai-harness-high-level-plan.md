@@ -45,10 +45,10 @@ flowchart TB
 
 The term covers two related concepts:
 
-| | Agent Runtime Harness | Evaluation Harness |
-| --- | --- | --- |
-| **Purpose** | Run an agent safely in production | Measure model or agent quality |
-| **When it runs** | At request time | During development and CI/CD |
+|                   | Agent Runtime Harness                             | Evaluation Harness                        |
+| ----------------- | ------------------------------------------------- | ----------------------------------------- |
+| **Purpose**       | Run an agent safely in production                 | Measure model or agent quality            |
+| **When it runs**  | At request time                                   | During development and CI/CD              |
 | **Typical tools** | LangGraph, AutoGen (AG2), CrewAI, Semantic Kernel | lm-evaluation-harness, custom eval suites |
 
 ### 1. Agent Runtime Harness (Execution & Control)
@@ -60,7 +60,7 @@ In production, the harness gives an agent the environment, context management, a
 - **Tool and environment execution:** Isolated sandboxes (for example Docker containers) let agents run code, call APIs, or query databases safely.
 - **The Reason → Act → Observe loop:** The harness captures the model's intended action, runs the tool, and feeds the observation back so the model can choose the next step.
 - **Memory and context control:** It manages short-term history and long-term memory, summarizing or pruning long traces to fit the context window.
-- **Guardrails and security:** It enforces safety rules, permission scopes, prompt-injection defenses, and compliance checks *before* an action touches the real world.
+- **Guardrails and security:** It enforces safety rules, permission scopes, prompt-injection defenses, and compliance checks _before_ an action touches the real world.
 
 ### 2. Evaluation Harness (Testing & Quality)
 
@@ -165,7 +165,9 @@ dotenv.config();
 // Tool 1: database lookup (simulated)
 const fetchUserSubscriptionTool = tool(
   async ({ userId }: { userId: string }) => {
-    console.log(`\n[Harness Executing Tool]: Fetching DB info for user ${userId}...`);
+    console.log(
+      `\n[Harness Executing Tool]: Fetching DB info for user ${userId}...`,
+    );
 
     const mockDb: Record<string, { plan: string; status: string }> = {
       user_123: { plan: "Pro Tier", status: "active" },
@@ -182,13 +184,15 @@ const fetchUserSubscriptionTool = tool(
     schema: z.object({
       userId: z.string().describe("The user ID to fetch details for"),
     }),
-  }
+  },
 );
 
 // Tool 2: external action (simulated refund)
 const processRefundTool = tool(
   async ({ userId, amount }: { userId: string; amount: number }) => {
-    console.log(`\n[Harness Executing Tool]: Processing $${amount} refund for ${userId}...`);
+    console.log(
+      `\n[Harness Executing Tool]: Processing $${amount} refund for ${userId}...`,
+    );
 
     return JSON.stringify({ status: "success", refundId: `ref_${Date.now()}` });
   },
@@ -199,7 +203,7 @@ const processRefundTool = tool(
       userId: z.string().describe("Target user ID"),
       amount: z.number().positive().describe("Amount to refund in USD"),
     }),
-  }
+  },
 );
 
 const tools = [fetchUserSubscriptionTool, processRefundTool];
@@ -247,7 +251,7 @@ async function runHarnessTask(threadId: string, userInput: string) {
   // Step 1: run the agent loop
   const result = await harnessAgent.invoke(
     { messages: [new HumanMessage(userInput)] },
-    config
+    config,
   );
 
   const finalMessage = result.messages[result.messages.length - 1];
@@ -260,7 +264,9 @@ async function runHarnessTask(threadId: string, userInput: string) {
     .includes("unauthorized_access_code");
 
   if (!passesGuardrail) {
-    console.error("[Harness Safety Evaluation]: BLOCKED response due to policy violation.");
+    console.error(
+      "[Harness Safety Evaluation]: BLOCKED response due to policy violation.",
+    );
     return "Error: Output blocked by safety evaluation guardrail.";
   }
 
@@ -278,13 +284,13 @@ async function main() {
   // Turn 1: triggers both tools
   await runHarnessTask(
     sessionThreadId,
-    "Hi, my user ID is user_123. Can you please refund $50 for my last invoice?"
+    "Hi, my user ID is user_123. Can you please refund $50 for my last invoice?",
   );
 
   // Turn 2: answered from memory in the same thread
   await runHarnessTask(
     sessionThreadId,
-    "What was the refund status and ID you just generated?"
+    "What was the refund status and ID you just generated?",
   );
 }
 
@@ -301,12 +307,12 @@ npx tsx agentHarness.ts
 
 ### What this example demonstrates
 
-| Capability | Purpose |
-| --- | --- |
-| **State persistence** | `MemorySaver` keeps thread context, so you don't resend the full history on every call. |
-| **Schema-validated tools** | Zod validates tool parameters before execution. |
-| **Tool execution loop** | Tool results feed straight back into the ReAct loop. |
-| **Post-evaluation layer** | A wrapper outside the agent audits responses before they reach the user. |
+| Capability                 | Purpose                                                                                 |
+| -------------------------- | --------------------------------------------------------------------------------------- |
+| **State persistence**      | `MemorySaver` keeps thread context, so you don't resend the full history on every call. |
+| **Schema-validated tools** | Zod validates tool parameters before execution.                                         |
+| **Tool execution loop**    | Tool results feed straight back into the ReAct loop.                                    |
+| **Post-evaluation layer**  | A wrapper outside the agent audits responses before they reach the user.                |
 
 ---
 
@@ -345,12 +351,12 @@ flowchart TD
 
 ### Core concepts
 
-| Component | Responsibility | Implementation |
-| --- | --- | --- |
-| **Pipeline state** | Shared context passed between nodes | `Annotation.Root` |
-| **Parallel sub-agents** | Independent reasoning units running concurrently | Branching nodes, each wrapping a ReAct agent |
-| **Aggregator** | Merges parallel outputs into one response | Fan-in node that reads all branch results from state |
-| **Evaluation gate** | Quality and safety check outside the agent logic | LLM judge with Zod-structured output |
+| Component               | Responsibility                                   | Implementation                                       |
+| ----------------------- | ------------------------------------------------ | ---------------------------------------------------- |
+| **Pipeline state**      | Shared context passed between nodes              | `Annotation.Root`                                    |
+| **Parallel sub-agents** | Independent reasoning units running concurrently | Branching nodes, each wrapping a ReAct agent         |
+| **Aggregator**          | Merges parallel outputs into one response        | Fan-in node that reads all branch results from state |
+| **Evaluation gate**     | Quality and safety check outside the agent logic | LLM judge with Zod-structured output                 |
 
 ### Setup
 
@@ -427,7 +433,7 @@ const codeSearchTool = tool(
     name: "code_search",
     description: "Searches the enterprise codebase for implementations.",
     schema: z.object({ query: z.string() }),
-  }
+  },
 );
 
 // Mock tool 2: vulnerability scanner
@@ -438,7 +444,7 @@ const vulnerabilityScanTool = tool(
     name: "vulnerability_scan",
     description: "Scans code or configurations for security flaws.",
     schema: z.object({ target: z.string() }),
-  }
+  },
 );
 
 // Sub-agent 1: technical architect
@@ -460,9 +466,11 @@ const securitySubAgent = createReactAgent({
 // Shared helper: run a sub-agent and return its final text
 async function runSubAgent(
   agent: typeof techSubAgent,
-  request: string
+  request: string,
 ): Promise<string> {
-  const response = await agent.invoke({ messages: [new HumanMessage(request)] });
+  const response = await agent.invoke({
+    messages: [new HumanMessage(request)],
+  });
   return response.messages[response.messages.length - 1].content.toString();
 }
 
@@ -499,7 +507,9 @@ async function techAgentNode(state: PipelineStateType) {
 // Node 3b: security sub-agent
 async function securityAgentNode(state: PipelineStateType) {
   console.log("--> [Node: Security Sub-Agent]: Running security evaluation...");
-  return { securityAnalysis: await runSubAgent(securitySubAgent, state.request) };
+  return {
+    securityAnalysis: await runSubAgent(securitySubAgent, state.request),
+  };
 }
 
 // Node 4: aggregator
@@ -518,7 +528,7 @@ ${state.securityAnalysis}
 
   const response = await model.invoke([
     new SystemMessage(
-      "You are an Executive Aggregator. Synthesize sub-agent outputs into a clean final structure."
+      "You are an Executive Aggregator. Synthesize sub-agent outputs into a clean final structure.",
     ),
     new HumanMessage(aggregationPrompt),
   ]);
@@ -528,13 +538,19 @@ ${state.securityAnalysis}
 
 // Node 5: quality evaluation gate
 async function evaluationGateNode(state: PipelineStateType) {
-  console.log("--> [Node: Evaluation Gate]: Running quality audit on final output...");
+  console.log(
+    "--> [Node: Evaluation Gate]: Running quality audit on final output...",
+  );
 
   const JudgeSchema = z.object({
     passed: z
       .boolean()
-      .describe("Whether the output meets standards for safety, accuracy, and completeness."),
-    feedback: z.string().describe("Audit notes explaining the pass/fail decision."),
+      .describe(
+        "Whether the output meets standards for safety, accuracy, and completeness.",
+      ),
+    feedback: z
+      .string()
+      .describe("Audit notes explaining the pass/fail decision."),
   });
 
   const evaluatorModel = model.withStructuredOutput(JudgeSchema, {
@@ -552,7 +568,9 @@ Evaluate whether the response accurately addresses the request with proper struc
 `;
 
   const evalResult = await evaluatorModel.invoke([
-    new SystemMessage("You are a strict QA Auditor validating agent responses."),
+    new SystemMessage(
+      "You are a strict QA Auditor validating agent responses.",
+    ),
     new HumanMessage(evalPrompt),
   ]);
 
@@ -581,9 +599,7 @@ export function buildGenericHarnessPipeline() {
     .addEdge("input_guardrail", "router");
 
   // Parallel dispatch (scatter)
-  builder
-    .addEdge("router", "tech_agent")
-    .addEdge("router", "security_agent");
+  builder.addEdge("router", "tech_agent").addEdge("router", "security_agent");
 
   // Fan-in (gather)
   builder
@@ -600,13 +616,15 @@ export function buildGenericHarnessPipeline() {
         console.log("--> [Eval Outcome]: PASSED quality check.");
         return "approved";
       }
-      console.warn(`--> [Eval Outcome]: FAILED quality check. Reason: ${state.evalFeedback}`);
+      console.warn(
+        `--> [Eval Outcome]: FAILED quality check. Reason: ${state.evalFeedback}`,
+      );
       return "rejected";
     },
     {
       approved: END,
       rejected: END, // Replace with a repair/retry node in production
-    }
+    },
   );
 
   return builder.compile();
@@ -622,7 +640,9 @@ async function runDemo() {
   const userRequest =
     "How should we design a secure user payment processing system in TypeScript?";
 
-  console.log(`\nStarting Generic AI Harness Pipeline for query:\n"${userRequest}"\n`);
+  console.log(
+    `\nStarting Generic AI Harness Pipeline for query:\n"${userRequest}"\n`,
+  );
 
   const finalState = await pipeline.invoke({ request: userRequest });
 
@@ -771,16 +791,16 @@ flowchart TB
 
 An AI harness wraps the LLM in the infrastructure needed to make an AI system reliable. Its responsibilities are:
 
-| # | Responsibility | What it covers |
-| --- | --- | --- |
-| 1 | **Execution** | Run tools and external actions safely |
-| 2 | **State** | Maintain conversation and workflow state |
-| 3 | **Memory** | Manage short-term and long-term context |
-| 4 | **Control** | Decide which actions the agent may take |
-| 5 | **Safety** | Apply guardrails and permission checks |
-| 6 | **Evaluation** | Validate the quality and safety of results |
-| 7 | **Reliability** | Handle retries, failures, fallbacks, and recovery |
-| 8 | **Observability** | Track actions, tool calls, outputs, and eval results |
+| #   | Responsibility    | What it covers                                       |
+| --- | ----------------- | ---------------------------------------------------- |
+| 1   | **Execution**     | Run tools and external actions safely                |
+| 2   | **State**         | Maintain conversation and workflow state             |
+| 3   | **Memory**        | Manage short-term and long-term context              |
+| 4   | **Control**       | Decide which actions the agent may take              |
+| 5   | **Safety**        | Apply guardrails and permission checks               |
+| 6   | **Evaluation**    | Validate the quality and safety of results           |
+| 7   | **Reliability**   | Handle retries, failures, fallbacks, and recovery    |
+| 8   | **Observability** | Track actions, tool calls, outputs, and eval results |
 
 > **LLM = Brain**
 >
