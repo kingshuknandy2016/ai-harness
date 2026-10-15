@@ -77,14 +77,14 @@ As raw model quality converges across top providers, the **harness** often decid
 
 ## Implementations
 
-We are building **multiple implementations** of the harness, each adding more capability. Each version has its own source folder under `src/` and its own design document under `docs/`.
+We are building **multiple implementations** of the harness, each adding more capability. Each workflow has its own source folder under `src/` and its own design document under `docs/`.
 
-| Version | Status | Summary | Docs |
+| Workflow | Status | Summary | Docs |
 | --- | --- | --- | --- |
-| **v1** | Available | Single-agent customer-support harness: tools, per-thread memory, and a two-layer guardrail (policy rules + moderation classifier) | [docs/version1.md](./docs/version1.md) |
-| v2+ | Planned | To be announced | n/a |
+| **Workflow 1** | Available | Single-agent customer-support harness: tools, per-thread memory, and a two-layer guardrail (policy rules + moderation classifier) | [docs/workflows/workflow1.md](./docs/workflows/workflow1.md) |
+| Workflow 2+ | Planned | To be announced | n/a |
 
-### Version 1 at a glance
+### Workflow 1 at a glance
 
 A customer-support agent built with TypeScript, LangChain and OpenAI that can look up a subscription and issue a refund:
 
@@ -92,9 +92,9 @@ A customer-support agent built with TypeScript, LangChain and OpenAI that can lo
 - **Memory:** `MemorySaver` keeps conversation history per `thread_id`.
 - **Guardrail:** after the agent finishes, deterministic policy rules (verified active subscription, refund cap, no secret leakage) and an OpenAI moderation classifier decide whether the reply may be returned. It fails closed.
 
-Code lives in [`src/v1`](./src/v1). Read [docs/version1.md](./docs/version1.md) for the flow diagram, step-by-step explanation, design decisions and known limitations.
+Code lives in [`src/workflow1`](./src/workflow1). Read [docs/workflows/workflow1.md](./docs/workflows/workflow1.md) for the flow diagram, step-by-step explanation, design decisions and known limitations.
 
-### Running version 1
+### Running Workflow 1
 
 Prerequisites: Node.js 18+ and an OpenAI API key.
 
@@ -118,10 +118,10 @@ npm run harness
 
 ## Branching model
 
-- **One branch per version** (for example `v1`, `v2`): each version is developed and iterated on its own branch.
-- **`main` holds all the code**: finished versions are merged into `main`, so it contains every version side by side (`src/v1`, `src/v2`, ...) along with the docs.
+- **One branch per workflow** (for example `workflow1`, `workflow2`): each workflow is developed and iterated on its own branch.
+- **`main` holds all the code**: finished workflows are merged into `main`, so it contains every workflow side by side (`src/workflow1`, `src/workflow2`, ...) along with the docs.
 
-To work on a version, check out its branch. To see everything, use `main`.
+To work on a workflow, check out its branch. To see everything, use `main`.
 
 ---
 
@@ -131,8 +131,9 @@ To work on a version, check out its branch. To see everything, use `main`.
 .
 ├── docs/
 │   ├── ai-harness-high-level-plan.md   # Concepts, patterns, target architecture
-│   └── version1.md                     # Solution document for v1
+│   └── workflows/
+│       └── workflow1.md                # Solution document for Workflow 1
 ├── src/
-│   └── v1/                             # Version 1 implementation
+│   └── workflow1/                      # Workflow 1 implementation
 └── README.md
 ```

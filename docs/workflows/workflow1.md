@@ -1,11 +1,11 @@
-# Version 1: Single-Agent Harness with Guardrails
+# Workflow 1: Single-Agent Harness with Guardrails
 
-> Solution and feature document for **v1** of the AI harness. It covers one slice of the wider plan in [ai-harness-high-level-plan.md](./ai-harness-high-level-plan.md) (Example 1, the single-agent harness). Multi-agent routing and the LLM-as-a-Judge gate are out of scope for v1.
+> Solution and feature document for **Workflow 1** of the AI harness. It covers one slice of the wider plan in [ai-harness-high-level-plan.md](../ai-harness-high-level-plan.md) (Example 1, the single-agent harness). Multi-agent routing and the LLM-as-a-Judge gate are out of scope for Workflow 1.
 
 | | |
 | --- | --- |
-| **Code** | `src/v1/` |
-| **Run** | `npm run harness` (runs `tsx src/v1/main.ts`) |
+| **Code** | `src/workflow1/` |
+| **Run** | `npm run harness` (runs `tsx src/workflow1/main.ts`) |
 | **Stack** | TypeScript, Node.js, LangChain (`createAgent`), LangGraph `MemorySaver`, Zod, OpenAI `gpt-4o-mini` |
 | **Config** | `OPENAI_API_KEY` in `.env` (loaded by `dotenv/config` in `main.ts`) |
 
@@ -15,9 +15,9 @@
 
 ### What we are trying to achieve
 
-Build a small but production-shaped **agent harness**: a customer-support agent that can look up a subscription and issue a refund, wrapped in the infrastructure that makes this safe to run. The LLM is the brain, and v1 builds the body around it:
+Build a small but production-shaped **agent harness**: a customer-support agent that can look up a subscription and issue a refund, wrapped in the infrastructure that makes this safe to run. The LLM is the brain, and Workflow 1 builds the body around it:
 
-| Harness concern | v1 implementation |
+| Harness concern | Workflow 1 implementation |
 | --- | --- |
 | **Tools** | `fetch_user_subscription` (DB lookup) and `process_refund` (external action), both mocked and Zod-validated |
 | **Memory / state** | `MemorySaver` checkpointer keyed by `thread_id`, so follow-up turns remember earlier ones |
@@ -28,9 +28,9 @@ Build a small but production-shaped **agent harness**: a customer-support agent 
 
 - Show the **Reason → Act → Observe** loop end to end with real tool calls.
 - Keep safety **outside the model**. The prompt asks the model to behave, and the guardrail checks that it did.
-- Keep the code small and split by responsibility, so later versions (multi-agent, judge gate) extend it instead of rewriting it.
+- Keep the code small and split by responsibility, so later workflows (multi-agent, judge gate) extend it instead of rewriting it.
 
-### Non-goals (v1)
+### Non-goals (Workflow 1)
 
 - Multi-agent routing, parallel sub-agents, aggregation (see Example 2 of the plan).
 - LLM-as-a-Judge evaluation and repair or retry loops.
@@ -88,7 +88,7 @@ flowchart TD
 ## 3. Architecture and components
 
 ```text
-src/v1/
+src/workflow1/
 ├── main.ts                      # Demo runner (loads .env, runs two turns)
 ├── tools/
 │   ├── fetchUserSubscriptionTool.ts   # Mock DB lookup
@@ -145,7 +145,7 @@ Rules like "refund only if active" are about what the agent *did*, not what it *
 | Fail closed | An unavailable safety check must not become an open door. |
 | One `evaluateTurn` entry point | `runHarnessTask` stays simple, and the guardrail can change internally without touching it. |
 | Generic message to the user, specific reason in logs | The user learns nothing about the rules. Operators can still debug. |
-| Mocked tools | Keeps v1 runnable with only an OpenAI key, while the schemas stay realistic. |
+| Mocked tools | Keeps Workflow 1 runnable with only an OpenAI key, while the schemas stay realistic. |
 
 ---
 
@@ -165,7 +165,7 @@ Expected output: for each turn, the user input, any `[Harness Executing Tool]` l
 
 ## 7. Limitations and known gaps
 
-1. **Guardrail is not yet wired in.** `guardrail.ts` is implemented, but `runHarnessTask.ts` currently runs the older keyword check (`unauthorized_access_code`), and the `evaluateTurn` call is commented out. To enable v1 as designed, remove the keyword check and uncomment the `evaluateTurn` block.
+1. **Guardrail is not yet wired in.** `guardrail.ts` is implemented, but `runHarnessTask.ts` currently runs the older keyword check (`unauthorized_access_code`), and the `evaluateTurn` call is commented out. To enable Workflow 1 as designed, remove the keyword check and uncomment the `evaluateTurn` block.
 2. **Checks run after the tools.** The guardrail evaluates the finished turn. A refund that already executed is not rolled back when the reply is blocked. Production should gate `process_refund` **before** execution (a pre-tool check or human approval).
 3. **No input guardrail.** User messages are not screened for prompt injection or out-of-scope requests.
 4. **Moderation scope.** The classifier covers harmful content, not business risk. Business rules live in the policy layer and are only as complete as `RULES`.
@@ -185,4 +185,4 @@ Ordered roughly by value:
 4. Input guardrail (classifier-based injection and scope check).
 5. Durable checkpointer (Postgres or Redis) and tracing (LangSmith).
 6. Retry and timeout limits on the agent loop.
-7. Evolve toward the router, parallel sub-agents, aggregator and LLM-as-a-Judge gate described in [ai-harness-high-level-plan.md](./ai-harness-high-level-plan.md).
+7. Evolve toward the router, parallel sub-agents, aggregator and LLM-as-a-Judge gate described in [ai-harness-high-level-plan.md](../ai-harness-high-level-plan.md).
